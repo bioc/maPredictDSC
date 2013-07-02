@@ -1,0 +1,6 @@
+## Edit Adi L. Tarca
+##Namespace file for maPredictDSC package
+importFrom(MASS,lda)
+importMethodsFrom(AnnotationDbi,get,as.list)
+export("predictDSC","aggregateDSC","perfDSC")
+

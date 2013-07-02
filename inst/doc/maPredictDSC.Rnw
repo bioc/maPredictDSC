@@ -1,0 +1,158 @@
+% -*- mode: noweb; noweb-default-code-mode: R-mode; -*-
+%\VignetteIndexEntry{maPredictDSC}
+%\VignetteKeywords{Classification}
+%\VignettePackage{maPredictDSC}}
+\documentclass[11pt]{article}
+
+%\usepackage{amsmath,epsfig,psfig,fullpage} 
+\usepackage{amsmath,epsfig,fullpage} 
+%\usepackage{graphicx,pstricks}
+%\usepackage{ifpdf}
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+\usepackage{url}
+
+\parindent 0in
+
+\bibliographystyle{abbrvnat}
+\begin{document}
+
+\title{\bf Bioconductor's maPredictDSC package}
+\author{Adi L. Tarca$^{1,2,3}$}
+
+\maketitle
+
+$^1$Department of Computer Science, Wayne State University\\
+$^2$Bioinformatics and Computational Biology Unit of the NIH Perinatology Research Branch\\
+$^3$Center for Molecular Medicine and Genetics, Wayne State University \\
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Overview}
+
+This package implements the classification pipeline of the best overall
+team (Team221) (see \cite{Tarca:2013SB}) in the IMPROVER Diagnostic Signature Challenge described
+in \cite{ Meyer:2012}. Additional capability is added to explore other combinations 
+of methods for data preprocessing, feature ranking and classification 
+described in \cite{Tarca:2013NM}. In a nutshell, with this package
+one starts with Affymetrix .CEL expression files (all platforms supported) some
+of which correspond to a set of training samples (class is
+required, 2 classes only) while some other correspond to test samples for which the class will be predicted. One or more
+models are built on the training data, and predictions are made on the
+test samples. Several performance metrics used in the IMPROVER DSC can
+be computed for the fitted models if the class of the test samples is
+known including the Area Under the Precision-Recall Curve (AUPR), 
+Belief Confusion Metric (BCM) and Correct Class Enrichment Metric (CCEM). 
+Note that the sample size for this example as well as the arguments in the 
+function calls below were chosen to limit the amount of time required to run the example on a decent computer (max 5 mins, as required by the Bioconductor standards).
+ See the cited references for results on several datasets of much larger 
+ sample size and more appropriate values for the arguments in the function calls.
+
+
+\section{Developing prediction models with maPredictDSC package}
+
+This document provides basic introduction on how to use the 
+{\tt maPredictDSC} package. For extended description of the methods 
+used in this package please consult these references: 
+\cite{Tarca:2013SB} and \cite{Tarca:2013NM}.\\ 
+
+We demonstrate the functionality of this package using a 
+set of lung cancer samples obtained using Affymetrix HG-U133 Plus 2.0 
+technology that are available from GEO. In this example we use 
+7 Adenocarcinoma (AC) and 8 Squamous cell carcinoma (SCC) samples taken
+at random from 3 GEO datasets (GSE10245, GSE18842 and GSE2109) and 
+15 samples used for testing purpose from a dataset produced by the 
+organizers of the IMPROVER Diagnostic Signature Challenge also 
+available from GEO (GSE43580). The data is available in the {\tt LungCancerACvsSCCGEO} package.
+The assignment of the samples into groups is defined in the
+{\tt anoLC} data frame available by loading the {\tt LungCancerACvsSCCGEO}
+datset as shown below:  
+ 
+<<eval=TRUE, echo=TRUE>>=
+library(maPredictDSC)
+library(LungCancerACvsSCCGEO)
+data(LungCancerACvsSCCGEO)
+anoLC
+gsLC
+@
+
+The data frame {\tt gsLC} included also in this dataset gives 
+the class of the test samples that we will use later to assess
+the predictions of different models produced by the {\tt predictDSC}
+function which is the main function of the package.   
+The {\tt predictDSC} function takes as input a folder of raw 
+Affymetrix CEL files and explores a set of combinations of data 
+preprocessing (rma, gcrma, mas5), feature ranking methods 
+(t-test, moderated t-test, wilcoxon test) and classifier types 
+(LDA, SVM, kNN). For each such combination, the optimal number of 
+genes to be used in the model is automatically determined by 
+optimizing the AUC statistic computed  via cross-validation on the training data. Also, 
+for each combination, a final model is fitted using all training data, 
+and predictions on the "Test" samples (defined as such in the 
+{\tt ano} data frame) are computed.  
+
+<<eval=TRUE, echo=TRUE>>=
+modlist=predictDSC(ano=anoLC,
+celfile.path=system.file("extdata/lungcancer",package="LungCancerACvsSCCGEO"),
+annotation="hgu133plus2.db", preprocs=c("rma"),
+filters=c("mttest","ttest"),classifiers=c("LDA","kNN"),
+CVP=2,NF=4, NR=1,FCT=1.0)
+@
+In addition to the 27 models that can be fitted with the simple call of the function 
+above, one can obtain 27 additional models by changing the FCT (fold change threshold)
+from 1.0 to say 1.25 or 1.5 fold. This will exclude genes from being potential candidate 
+to be included in the model if the change in expression on the current training data fold
+is not above FCT. Note, if there are not at least NF features meeting the fold change required
+threshold, the threshold will be ignored and features will be selected from the top ones sorted by p-values.    
+
+We can explore the details recorded for each methods combination stored in the elements of modlist:
+<<eval=TRUE, echo=TRUE>>=
+modlist[["rma_ttest_LDA"]]
+@
+Note that the names of the features selected for this model which correspond to Affymetrix probesets
+have an "F" suffix added to their names since LDA does not like variable neames to start with a number. 
+
+The different combinations of methods can be ranked using the 
+cross-validated AUC on the training data using:
+ 
+<<eval=TRUE,echo=TRUE,results=verbatim>>=
+trainingAUC=sort(unlist(lapply(modlist,"[[","best_AUC")),decreasing=TRUE)
+cbind(trainingAUC)
+@
+
+Now the model that apears to be best using the AUC on the training data will
+not necessarily be best according to the same or other statistics on the test data.
+To illustrate this, we will compute various metrics such as BCM, CCEM and AUPR implemented
+in the {\tt perfDSC} function for these models on the test data: 
+
+<<eval=TRUE,echo=TRUE,results=verbatim>>=
+perF=function(out){
+perfDSC(pred=out$predictions,gs=gsLC)
+}
+testPerf=t(data.frame(lapply(modlist,perF)))
+testPerf=testPerf[order(testPerf[,"AUC"],decreasing=TRUE),]
+testPerf
+@ 
+
+We can also combine the predictions from several models aka "wisdom of
+crowds" by using the {\tt aggregateDSC} function:
+
+<<eval=TRUE,echo=TRUE,results=verbatim>>=
+best3=names(trainingAUC)[1:3]
+aggpred=aggregateDSC(modlist[best3])
+#test the aggregated model on the test data
+perfDSC(aggpred,gsLC)
+@
+In this example combining the predictions from the best 3 models (as apparent on the training data) 
+leads to better prediction on the test data compared to using the single best model chosen 
+according to the training performance.  
+
+\bibliography{maPredictDSC} 
+\end{document}
+
+
+
+
+
+

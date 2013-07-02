@@ -1,0 +1,17 @@
+Package: maPredictDSC
+Version: 0.99.0
+Date: 2013-6-27
+Title: Phenotype prediction using microarray data: approach of the best
+        overall team in the IMPROVER Diagnostic Signature Challenge
+Author: Adi Laurentiu Tarca <atarca@med.wayne.edu>
+Depends: R (>= 2.15.0),
+        MASS,affy,limma,gcrma,ROC,class,e1071,caret,hgu133plus2.db,ROCR,AnnotationDbi,LungCancerACvsSCCGEO
+Suggests: multicore
+Maintainer: Adi Laurentiu Tarca <atarca@med.wayne.edu>
+Description: This package implements the classification pipeline of the best overall team (Team221) in the IMPROVER Diagnostic Signature Challenge. Additional functionality is added to compare 27 combinations of data preprocessing, feature selection and classifier types.
+License: GPL-2
+URL: http://bioinformaticsprb.med.wayne.edu/maPredictDSC
+biocViews: Microarray, Classification
+Collate: aggregateDSC.R perfDSC.R predictDSC.R maPredictDSC.R
+Imports:
+LazyLoad: yes
