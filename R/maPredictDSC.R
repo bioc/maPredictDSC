@@ -10,8 +10,8 @@ require(e1071)
 require(caret)
 require(annotation,character.only=TRUE)
 
-if("multicore"%in%installed.packages()){
-mc=(require(multicore))
+if("parallel"%in%installed.packages()){
+mc=(require(parallel))
 }else{mc=FALSE}
 
 
