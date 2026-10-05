@@ -1,13 +1,6 @@
 maPredictDSC=function(ano,celfile.path,annotation,preproc.m="rma",
 filter.m="mttest",FCT=1.0,classifier.m="LDA", otherCovariates=NULL,CVP=4,NF=20,by=ifelse(NF>10,2,1), NR=10){
 
-require(affy)
-require(limma)
-require(gcrma)
-require(ROC)
-require(class)
-require(e1071)
-require(caret)
 require(annotation,character.only=TRUE)
 
 if("parallel"%in%installed.packages()){

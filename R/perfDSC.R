@@ -2,8 +2,6 @@
 
 perfDSC=function(pred,gs){
 
-require(ROCR)
-require(ROC)
 gs=gs[rownames(pred),]
 
 ########## CCEM

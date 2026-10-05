@@ -71,10 +71,10 @@ datset as shown below:
  
 <<eval=TRUE, echo=TRUE>>=
 library(maPredictDSC)
-library(LungCancerACvsSCCGEO)
 data(LungCancerACvsSCCGEO)
 anoLC
 gsLC
+celfile.path <- getLungCancerData(anoLC)
 @
 
 The data frame {\tt gsLC} included also in this dataset gives 
@@ -94,7 +94,7 @@ and predictions on the "Test" samples (defined as such in the
 
 <<eval=TRUE, echo=TRUE>>=
 modlist=predictDSC(ano=anoLC,
-celfile.path=system.file("extdata/lungcancer",package="LungCancerACvsSCCGEO"),
+celfile.path=celfile.path,
 annotation="hgu133plus2.db", preprocs=c("rma"),
 filters=c("mttest","ttest"),classifiers=c("LDA","kNN"),
 CVP=2,NF=4, NR=1,FCT=1.0)

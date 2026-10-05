@@ -68,16 +68,18 @@ See cited documents for more details.
 
 
 \references{
-Adi L. Tarca, Mario Lauria, Michael Unger, Erhan Bilal, Stephanie Boue, Kushal Kumar Dey,
- Julia Hoeng, Heinz Koeppl, Florian Martin, Pablo Meyer, Preetam Nandy, Raquel Norel,
-  Manuel Peitsch, Jeremy J Rice, Roberto Romero, Gustavo Stolovitzky, Marja Talikka,
-   Yang Xiang, Christoph Zechner, and IMPROVER DSC Collaborators, 
-   Strengths and limitations of microarray-based phenotype prediction: Lessons learned 
-   from the IMPROVER Diagnostic Signature Challenge. Bioinformatics, submitted 2013. \cr
+Tarca AL, Lauria M, Unger M, Bilal E, Boue S, Dey KK, Hoeng J, Koeppl H,
+Martin F, Meyer P, Nandy P, Norel R, Peitsch M, Rice JJ, Romero R,
+Stolovitzky G, Talikka M, Xiang Y, Zechner C, and IMPROVER DSC Collaborators.
+Strengths and limitations of microarray-based phenotype prediction: lessons
+learned from the IMPROVER Diagnostic Signature Challenge.
+\emph{Bioinformatics}. 2013;29(22):2892-2899.
+doi:10.1093/bioinformatics/btt492. \cr
 
-Tarca AL, Than NG, Romero R, Methodological Approach from the Best Overall 
- Team in the IMPROVER Diagnostic Signature Challenge, Systems Biomedicine, submitted, 2013. \cr  
-
+Tarca AL, Than NG, Romero R.
+Methodological approach from the Best Overall Team in the sbv IMPROVER
+Diagnostic Signature Challenge.\emph{Systems Biomedicine}. 2013;1(4):217-227.
+doi:10.4161/sysb.25980.
 }
 
 \author{Adi Laurentiu Tarca <atarca@med.wayne.edu>}
@@ -85,25 +87,25 @@ Tarca AL, Than NG, Romero R, Methodological Approach from the Best Overall
 \seealso{\code{\link{aggregateDSC}}}
 
 \examples{
-
 library(maPredictDSC)
-library(LungCancerACvsSCCGEO)
 data(LungCancerACvsSCCGEO)
 anoLC
 gsLC
 table(anoLC$group)
 
-#run a series of methods combinations
-modlist=predictDSC(ano=anoLC,celfile.path=system.file("extdata/lungcancer",package="LungCancerACvsSCCGEO"),
-annotation="hgu133plus2.db",
-preprocs=c("rma"),filters=c("mttest","wilcox"),FCT=1.0,classifiers=c("LDA","kNN"),
-CVP=2,NF=4, NR=1)
+\dontrun{
+celfile.path <- getLungCancerData(anoLC)
 
+#run a series of methods combinations
+modlist=predictDSC(ano=anoLC,
+celfile.path=celfile.path,
+annotation="hgu133plus2.db", preprocs=c("rma"),
+filters=c("mttest","ttest"),classifiers=c("LDA","kNN"),
+CVP=2,NF=4, NR=1,FCT=1.0)
 
 #rank combinations by the performance on training data (AUC)
 trainingAUC=sort(unlist(lapply(modlist,"[[","best_AUC")),decreasing=TRUE)
 trainingAUC
-
 
 #optional step; since we know the class of the test samples, let's see how the
 #methods combinations perform on the test data
@@ -120,10 +122,7 @@ best3=names(trainingAUC)[1:3]
 aggpred=aggregateDSC(modlist[best3])
 #test the aggregated model on the test data
 perfDSC(aggpred,gsLC)
-
-
-
 }
-
+}
 \keyword{parametric}% at least one, from doc/KEYWORDS
 \keyword{methods}% __ONLY ONE__ keyword per line
